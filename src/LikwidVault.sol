@@ -14,15 +14,19 @@ import {NoDelegateCall} from "./NoDelegateCall.sol";
 import {PoolId} from "./types/PoolId.sol";
 import {BalanceDelta, toBalanceDelta, BalanceDeltaLibrary} from "./types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "./types/BeforeSwapDelta.sol";
+import {Hooks} from "./libraries/Hooks.sol";
 import {CurrencyGuard} from "./libraries/CurrencyGuard.sol";
 
 /// @title Likwid vault
 /// @notice Holds the property for all likwid pools
 contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
     using SafeCast for *;
+    using Hooks for IHooks;
     using CurrencyGuard for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
     using BeforeSwapDeltaLibrary for BeforeSwapDelta;
+
+    error NotImplemented();
 
     mapping(PoolId id => address) public pools;
 
@@ -58,6 +62,8 @@ contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
         if (key.currency0 >= key.currency1) {
             revert CurrenciesOutOfOrderOrEqual(Currency.unwrap(key.currency0), Currency.unwrap(key.currency1));
         }
+        if (!key.hooks.isValidHookAddress()) revert Hooks.HookAddressNotValid(address(key.hooks));
+
         key.hooks.beforeInitialize(msg.sender, key, sqrtPriceX96);
         // likwid pools are initialized with tick = 1
         tick = 1;
@@ -108,7 +114,7 @@ contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
         noDelegateCall
         returns (BalanceDelta, BalanceDelta)
     {
-        revert("No modifyLiquidity allowed");
+        revert NotImplemented();
     }
 
     /// @inheritdoc IPoolManager
@@ -119,12 +125,12 @@ contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
         noDelegateCall
         returns (BalanceDelta)
     {
-        revert("No donate allowed");
+        revert NotImplemented();
     }
 
     /// @inheritdoc IPoolManager
     function updateDynamicLPFee(PoolKey memory, uint24) external pure {
-        revert("No updateDynamicLPFee allowed");
+        revert NotImplemented();
     }
 
     /// @inheritdoc IPoolManager
