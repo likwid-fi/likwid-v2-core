@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {Owned} from "solmate/auth/Owned.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import {Currency, CurrencyLibrary} from "./types/Currency.sol";
@@ -17,13 +18,13 @@ import {CurrencyGuard} from "./libraries/CurrencyGuard.sol";
 
 /// @title Likwid vault
 /// @notice Holds the property for all likwid pools
-contract LikwidVault is IPoolManager, NoDelegateCall, ERC6909Claims {
+contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
     using SafeCast for *;
     using CurrencyGuard for Currency;
     using BalanceDeltaLibrary for BalanceDelta;
     using BeforeSwapDeltaLibrary for BeforeSwapDelta;
 
-    mapping(PoolId id => address) internal _pools;
+    mapping(PoolId id => address) public pools;
 
     /// transient storage
     bool transient unlocked;
@@ -37,7 +38,7 @@ contract LikwidVault is IPoolManager, NoDelegateCall, ERC6909Claims {
         _;
     }
 
-    constructor(address initialOwner) {}
+    constructor(address initialOwner) Owned(initialOwner) {}
 
     /// @inheritdoc IPoolManager
     function unlock(bytes calldata data) external override returns (bytes memory result) {
@@ -61,10 +62,10 @@ contract LikwidVault is IPoolManager, NoDelegateCall, ERC6909Claims {
         // likwid pools are initialized with tick = 1
         tick = 1;
         PoolId id = key.toId();
-        if (_pools[id] != address(0)) {
+        if (pools[id] != address(0)) {
             revert PoolAlreadyInitialized(id);
         }
-        _pools[id] = msg.sender;
+        pools[id] = msg.sender;
         emit Initialize(id, key.currency0, key.currency1, key.fee, key.tickSpacing, key.hooks, sqrtPriceX96, tick);
 
         key.hooks.afterInitialize(msg.sender, key, sqrtPriceX96, tick);
@@ -79,7 +80,7 @@ contract LikwidVault is IPoolManager, NoDelegateCall, ERC6909Claims {
     {
         if (params.amountSpecified == 0) revert SwapAmountCannotBeZero();
         PoolId id = key.toId();
-        if (_pools[id] == address(0)) revert PoolNotInitialized();
+        if (pools[id] == address(0)) revert PoolNotInitialized();
 
         BeforeSwapDelta beforeSwapDelta;
         (, beforeSwapDelta,) = key.hooks.beforeSwap(msg.sender, key, params, hookData);
