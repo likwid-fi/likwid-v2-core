@@ -101,7 +101,8 @@ contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
             swapDelta = swapDelta - hookDelta;
         }
 
-        // _appendPoolBalanceDelta(key, msg.sender, swapDelta); pool balance deltas are not updated here
+        _appendPoolBalanceDelta(key, address(key.hooks), hookDelta);
+        _appendPoolBalanceDelta(key, msg.sender, swapDelta);
     }
 
     /// @inheritdoc IPoolManager
