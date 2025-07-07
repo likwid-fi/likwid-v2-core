@@ -73,8 +73,6 @@ contract LikwidVault is IPoolManager, Owned, NoDelegateCall, ERC6909Claims {
         }
         pools[id] = msg.sender;
         emit Initialize(id, key.currency0, key.currency1, key.fee, key.tickSpacing, key.hooks, sqrtPriceX96, tick);
-
-        key.hooks.afterInitialize(msg.sender, key, sqrtPriceX96, tick);
     }
 
     /// @inheritdoc IPoolManager
