@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
+// Likwid Contracts
 pragma solidity 0.8.28;
 
 import {Currency} from "../types/Currency.sol";
